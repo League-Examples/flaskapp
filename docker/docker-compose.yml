@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: flaskapp
+    container_name: flaskapp_web
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URI=postgresql://postgres:postgres@db:5432/flaskapp
+      - SECRET_KEY=${SECRET_KEY:-developmentkey}
+      - FLASK_APP=flaskapp.wsgi:app
+      - FLASK_ENV=production
+    ports:
+      - "80000:8000"
+    networks:
+      - flaskapp-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: flaskapp_db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=flaskapp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    networks:
+      - flaskapp-network
+
+volumes:
+  postgres_data:
+
+networks:
+  flaskapp-network:
+    driver: bridge
