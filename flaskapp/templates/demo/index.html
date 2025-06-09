@@ -1,0 +1,17 @@
+{% extends "base/page.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Demo Application</h1>
+    <p>Welcome to the demo application. Please choose a demo page below:</p>
+    
+    <div class="list-group">
+        <a href="{{ url_for('demo.hello') }}" class="list-group-item list-group-item-action">
+            <i class="fa fa-hand-wave"></i> Hello Page
+        </a>
+        <a href="{{ url_for('demo.form') }}" class="list-group-item list-group-item-action">
+            <i class="fa fa-clipboard-list"></i> Form Demo
+        </a>
+    </div>
+</div>
+{% endblock %}
