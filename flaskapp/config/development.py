@@ -7,8 +7,19 @@ class DevelopmentConfig(BaseConfig):
     
     DEBUG = True
     
+    # Database settings for development with Docker PostgreSQL
+    DB_USER = os.getenv('DEV_DB_USER', 'postgres')
+    DB_PASSWORD = os.getenv('DEV_DB_PASSWORD', 'postgres')
+    DB_NAME = os.getenv('DEV_DB_NAME', 'flaskapp_dev')
+    DB_HOST = os.getenv('DEV_DB_HOST', 'localhost')
+    DB_PORT = os.getenv('DEV_DB_PORT', '5432')
+    
     # SQLAlchemy database URI for development
-    SQLALCHEMY_DATABASE_URI = os.getenv('DEV_DATABASE_URI', 'sqlite:///dev.db')
+    # Default to SQLite but can easily switch to PostgreSQL with Docker
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        'DEV_DATABASE_URI', 
+        f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+    )
     
     # Additional development-specific settings
     LOG_LEVEL = 'DEBUG'

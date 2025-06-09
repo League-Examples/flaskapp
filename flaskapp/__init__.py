@@ -15,7 +15,8 @@ def create_app():
     Application factory function.
     Creates and configures an instance of the Flask application.
     """
-    app = Flask(__name__)
+    app = Flask(__name__,
+                template_folder='templates')  # Explicitly define the template folder
     
     # Determine the configuration to use
     config_name = os.getenv('FLASK_ENV', 'development')
@@ -43,8 +44,9 @@ def create_app():
         db.create_all()
     
     # Register CLI commands
-    from flaskapp.cli import cmd1_command, cmd2_command
+    from flaskapp.cli import cmd1_command, cmd2_command, dev_cli
     app.cli.add_command(cmd1_command)
     app.cli.add_command(cmd2_command)
+    app.cli.add_command(dev_cli)
     
     return app

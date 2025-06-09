@@ -1,0 +1,73 @@
+{% extends "base/base.html" %}
+{% from 'bootstrap5/utils.html' import render_messages %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{{ url_for('main.index') }}">
+      <img src="{{ url_for('main.static', filename='flag.png') }}" alt="Flag" width="40" height="40">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        {% if current_user.is_authenticated %}
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+        </li>
+        {% endif %}
+
+
+        {% if current_user.is_admin %}
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('admin.index') }}">Admin</a>
+        </li>
+
+        {% endif %}
+      </ul>
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+        {% if current_user.is_authenticated %}
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a>
+        </li>
+        {% if current_user.avatar_url %}
+        <li class="nav-item">
+          <img src="{{ current_user.avatar_url }}" alt="Avatar" class="rounded-circle" width="30" height="30">
+        </li>
+        {% endif %}
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block subnavbar %}{% endblock %}
+
+{# {% block messages %}{{ render_messages(container=True) }}{% endblock %} #}
+{% block messages %}{% include 'base/_messages.html' %}{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block footer %}
+
+<div class="left">code-server-spawner {{version}}</div>
+<div class="right">
+  <img src="{{ url_for('main.static', filename='flag.png') }}" alt="Flag" class="inline"">
+    <a href=" https://www.jointheleague.org">Join the League</a>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}{% endblock %}
+</body>
+
+</html>
