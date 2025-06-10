@@ -11,5 +11,11 @@
             {{ render_form(form) }}
         </div>
     </div>
+    
+    {% if greeting %}
+    <div class="alert alert-success mt-4">
+        <h3><i class="fas fa-check-circle"></i> {{ greeting }}</h3>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

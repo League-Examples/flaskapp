@@ -6,9 +6,14 @@ the Flask application instance.
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_bootstrap import Bootstrap5
+from flask_font_awesome import FontAwesome
+from flask_login import current_user
 
 # Initialize extensions
 db = SQLAlchemy()
+bootstrap = Bootstrap5()
+fa = FontAwesome()
 
 def create_app():
     """
@@ -31,6 +36,8 @@ def create_app():
     
     # Initialize extensions with the app
     db.init_app(app)
+    bootstrap.init_app(app)
+    fa.init_app(app)
     
     # Register blueprints
     from flaskapp.main.routes import main_bp
@@ -39,14 +46,30 @@ def create_app():
     from flaskapp.auth.routes import auth_bp
     app.register_blueprint(auth_bp)
     
+    from flaskapp.demo import demo_bp
+    app.register_blueprint(demo_bp)
+    
     # Create database tables
     with app.app_context():
         db.create_all()
     
-    # Register CLI commands
-    from flaskapp.cli import cmd1_command, cmd2_command, dev_cli
-    app.cli.add_command(cmd1_command)
-    app.cli.add_command(cmd2_command)
-    app.cli.add_command(dev_cli)
-    
+
+    @app.context_processor
+    def inject_common_variables():
+        """
+        Inject common variables into the template context.
+        """
+        from importlib.metadata import metadata, version
+
+        meta = metadata("flaskapp")
+        
+
+        return {
+            "current_user": current_user,
+            'meta': {
+                "site_name": meta["Name"],
+                "version": version(meta["Name"]), 
+            }
+        }
+
     return app

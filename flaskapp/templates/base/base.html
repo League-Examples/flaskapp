@@ -6,7 +6,7 @@
     <title>{% block title %}Code Server{% endblock %}</title>
     {{ bootstrap.load_css() }}
     {{ font_awesome.load_css() }}
-    <link rel="stylesheet" href="{{ url_for('main.static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
     {% block head %}{% endblock %}
     {% block styles %}{% endblock %}
 </head>

@@ -150,6 +150,18 @@ wheels = [
 ]
 
 [[package]]
+name = "flask-fontawesome"
+version = "0.1.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "flask" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/87/40/d5780675fa8bec026a26cafcb4e9f31eec60d878896dee42ee7cda8f35cd/Flask-FontAwesome-0.1.5.tar.gz", hash = "sha256:1279c6c00e6cfebd086d1df0a7a6c6c59b44f636805521dbe640561aeb8c79a0", size = 4097373, upload-time = "2020-08-01T16:00:44.291Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c6/69/a596a8ee538af361e1bfbc5dfa306d1f5a69bfa0267aaefd78637e89e224/Flask_FontAwesome-0.1.5-py3-none-any.whl", hash = "sha256:52f807ccfce77946cf1abee544b59c5d80acfeb089ee91417bc2ef8f43069b2d", size = 4178142, upload-time = "2020-08-01T16:00:37.795Z" },
+]
+
+[[package]]
 name = "flask-login"
 version = "0.6.3"
 source = { registry = "https://pypi.org/simple" }
@@ -211,6 +223,7 @@ dependencies = [
     { name = "authlib" },
     { name = "bootstrap-flask" },
     { name = "flask" },
+    { name = "flask-fontawesome" },
     { name = "flask-login" },
     { name = "flask-session" },
     { name = "flask-sqlalchemy" },
@@ -230,6 +243,7 @@ requires-dist = [
     { name = "authlib", specifier = ">=1.6.0" },
     { name = "bootstrap-flask", specifier = ">=2.5.0" },
     { name = "flask", specifier = ">=3.1.1" },
+    { name = "flask-fontawesome", specifier = ">=0.1.5" },
     { name = "flask-login", specifier = ">=0.6.3" },
     { name = "flask-session", specifier = ">=0.8.0" },
     { name = "flask-sqlalchemy", specifier = ">=3.1.1" },

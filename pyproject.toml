@@ -1,7 +1,7 @@
 [project]
 name = "flaskapp"
 version = "0.1.0"
-description = "Add your description here"
+description = "Demonstration Flask application with user authentication and session management."
 readme = "README.md"
 authors = [
     { name = "Eric Busboom", email = "eric@busboom.org" }

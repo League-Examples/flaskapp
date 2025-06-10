@@ -3,9 +3,9 @@
 The demo application is implemented in the blueprint 'demo', 
 rooted at '/demo/'. It has these routes: 
 
-'/demo/index.html': Lists the other demo pages. 
-'/demo/hello.html': A simple page that says hello and displays the flag.png image.
-'/demo/form.html': A form that accepts a name and displays a greeting.
+'/demo/index': Lists the other demo pages. 
+'/demo/hello': A simple page that says hello and displays the flag.png image.
+'/demo/form': A form that accepts a name and displays a greeting.
 
 Extend `base/page.html` 
 

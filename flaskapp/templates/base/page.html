@@ -5,7 +5,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <a class="navbar-brand" href="{{ url_for('main.index') }}">
-      <img src="{{ url_for('main.static', filename='flag.png') }}" alt="Flag" width="40" height="40">
+      <img src="{{ url_for('static', filename='/images/flag.png') }}" alt="Flag" width="40" height="40">
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
       aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -17,15 +17,22 @@
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
         </li>
-        {% endif %}
-
-
-        {% if current_user.is_admin %}
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('admin.index') }}">Admin</a>
+        
+        <!-- Demo dropdown menu -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="demoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-flask"></i> Demo
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="demoDropdown">
+            <li><a class="dropdown-item" href="{{ url_for('demo.index') }}">Demo Index</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('demo.hello') }}">Hello Demo</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('demo.form') }}">Form Demo</a></li>
+          </ul>
         </li>
-
         {% endif %}
+
+
+
       </ul>
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
         {% if current_user.is_authenticated %}
@@ -58,9 +65,9 @@
 
 {% block footer %}
 
-<div class="left">code-server-spawner {{version}}</div>
+<div class="left">{{meta.site_name}} {{meta.version}}</div>
 <div class="right">
-  <img src="{{ url_for('main.static', filename='flag.png') }}" alt="Flag" class="inline"">
+  <img src="{{ url_for('static', filename='icons/favicon-32x32.png') }}" alt="Flag" class="inline"">
     <a href=" https://www.jointheleague.org">Join the League</a>
 
 </div>
@@ -71,3 +78,4 @@
 </body>
 
 </html>
+
