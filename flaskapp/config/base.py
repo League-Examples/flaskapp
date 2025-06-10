@@ -5,6 +5,13 @@ from pathlib import Path
 basedir = Path(__file__).parent.parent.parent.parent
 
 
+possible_oauth_providers = [
+    'github',
+    'google',
+    'discord',
+    'slack'
+]
+
 class BaseConfig:
     """Base configuration class with settings common to all environments."""
     
@@ -28,4 +35,9 @@ class BaseConfig:
     PERMANENT_SESSION_LIFETIME = 604800  # 7 days in seconds
     
     # OAuth settings
-    OAUTH_PROVIDERS = []  # Will be populated based on environment variables
+
+    OAUTH_PROVIDERS = [ n for n in possible_oauth_providers 
+                       if os.getenv(f'{n.upper()}_CLIENT_ID') and os.getenv(f'{n.upper()}_CLIENT_SECRET')]
+    
+
+   

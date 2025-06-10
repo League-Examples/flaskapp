@@ -14,25 +14,25 @@
                     <p class="card-text">Choose a service to sign in with:</p>
                     <div class="d-grid gap-3">
                         {% if 'github' in providers %}
-                        <a href="{{ url_for('auth.provider_login', provider='github') }}" class="btn btn-dark">
+                        <a href="{{ url_for('github.login') }}" class="btn btn-dark">
                             <i class="fa-brands fa-github me-2"></i> Sign in with GitHub
                         </a>
                         {% endif %}
                         
                         {% if 'google' in providers %}
-                        <a href="{{ url_for('auth.provider_login', provider='google') }}" class="btn btn-primary">
+                        <a href="{{ url_for('google.login') }}" class="btn btn-primary">
                             <i class="fa-brands fa-google me-2"></i> Sign in with Google
                         </a>
                         {% endif %}
                         
                         {% if 'discord' in providers %}
-                        <a href="{{ url_for('auth.provider_login', provider='discord') }}" class="btn btn-primary" style="background-color: #5865F2; border-color: #5865F2;">
+                        <a href="{{ url_for('discord.login') }}" class="btn btn-primary" style="background-color: #5865F2; border-color: #5865F2;">
                             <i class="fa-brands fa-discord me-2"></i> Sign in with Discord
                         </a>
                         {% endif %}
                         
                         {% if 'slack' in providers %}
-                        <a href="{{ url_for('auth.provider_login', provider='slack') }}" class="btn btn-primary" style="background-color: #4A154B; border-color: #4A154B;">
+                        <a href="{{ url_for('slack.login') }}" class="btn btn-primary" style="background-color: #4A154B; border-color: #4A154B;">
                             <i class="fa-brands fa-slack me-2"></i> Sign in with Slack
                         </a>
                         {% endif %}

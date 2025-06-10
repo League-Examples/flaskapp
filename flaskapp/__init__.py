@@ -34,6 +34,11 @@ def create_app():
     else:
         app.config.from_object('flaskapp.config.development.DevelopmentConfig')
     
+
+    # Allow OAuth over http in debug mode for development
+    if app.debug or os.environ.get('FLASK_ENV') == 'development':
+        os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
     # Initialize extensions with the app
     db.init_app(app)
     bootstrap.init_app(app)
@@ -44,10 +49,13 @@ def create_app():
     app.register_blueprint(main_bp)
     
 
-    
     from flaskapp.demo import demo_bp
     app.register_blueprint(demo_bp)
+
+    import  flaskapp.auth 
+    flaskapp.auth.init_app(app)
     
+
     # Create database tables
     with app.app_context():
         db.create_all()
@@ -70,5 +78,6 @@ def create_app():
                 "version": version(meta["Name"]), 
             }
         }
+    
 
     return app

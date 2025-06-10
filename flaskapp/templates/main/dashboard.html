@@ -1,0 +1,37 @@
+{% extends 'base/page.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3>Protected Dashboard</h3>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Welcome, {{ user.display_name or user.username }}!</h5>
+                    <p class="card-text">This is a protected page that only authenticated users can access.</p>
+                    
+                    <div class="alert alert-info">
+                        <h5>Your Account Information:</h5>
+                        <ul>
+                            <li><strong>Username:</strong> {{ user.username }}</li>
+                            <li><strong>Email:</strong> {{ user.email }}</li>
+                            {% if user.picture_url %}
+                            <li><strong>Profile Picture:</strong> <img src="{{ user.picture_url }}" alt="Profile Picture" class="img-thumbnail" style="max-width: 100px;"></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('auth.profile') }}" class="btn btn-primary">Edit Profile</a>
+                        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Back to Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

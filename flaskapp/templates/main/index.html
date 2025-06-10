@@ -78,6 +78,9 @@
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-success">
+                            <i class="fas fa-chart-line me-2"></i>Go to Dashboard
+                        </a>
                         <a href="/auth/profile" class="btn btn-primary">
                             <i class="fas fa-edit me-2"></i>Edit Profile
                         </a>
@@ -95,7 +98,7 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-body text-center">
                     <h3 class="mb-4">You are not logged in</h3>
-                    <p class="lead mb-4">Sign in to see your user information and access all features of the application.</p>
+                    <p class="lead mb-4">Sign in to access the dashboard and all features of the application.</p>
                     <a href="/auth/login/" class="btn btn-lg btn-primary">
                         <i class="fas fa-sign-in-alt me-2"></i>Sign In
                     </a>

@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from . import oauth
+
 from .models import User, AuthProvider
 from flaskapp import db
 from .forms import ProfileForm
@@ -11,10 +11,20 @@ import json
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth',
                    template_folder='templates')
 
+
+
+
 @auth_bp.route('/login/', methods=['GET', 'POST'])
 def login():
     """Login route showing available authentication providers."""
     # If user is already logged in, redirect to index
+
+    pre_auth_url = session.get('pre_auth_url')
+    if pre_auth_url:
+        # Clear the pre-auth URL after using it
+        session.pop('pre_auth_url', None)
+    
+        
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     
@@ -96,85 +106,84 @@ def profile():
     
     return render_template('auth/profile.html', form=form)
 
-# OAuth routes for each provider
-@auth_bp.route('/<provider>/login')
-def provider_login(provider):
-    """Redirect to provider authorization page."""
-    # Store original url in session for callback
-    redirect_uri = url_for('auth.provider_authorized', provider=provider, _external=True)
-    
-    # For linking accounts, check if user is already logged in
-    is_linking = current_user.is_authenticated
-    if is_linking:
-        session['linking'] = True
-    
-    return oauth.create_client(provider).authorize_redirect(redirect_uri)
 
-@auth_bp.route('/<provider>/authorized')
-def provider_authorized(provider):
+@auth_bp.route('/google/authorized')
+def google_authorized():
     """Callback route after provider authorization."""
-    token = oauth.create_client(provider).authorize_access_token()
-    
-    # Get user info from provider
-    provider_user_info = get_provider_user_info(provider, token)
-    
-    if not provider_user_info:
-        flash('Failed to get user info from provider.', 'danger')
+  
+    print(f"Provider: google")
+
+
+@auth_bp.route('/github/authorized')
+def github_authorized():
+    """Callback route after provider authorization."""
+    from flask_dance.contrib.github import github
+
+    if not github.authorized:
+        flash('GitHub authorization failed.', 'danger')
         return redirect(url_for('auth.login'))
-    
-    # Check if this is a linking operation
-    is_linking = session.pop('linking', False)
-    
-    # Find if this provider account is already registered
-    auth_provider = AuthProvider.query.filter_by(
-        provider=provider, 
-        provider_user_id=provider_user_info['id']
-    ).first()
-    
-    if auth_provider:
-        # Provider account already exists
-        if is_linking:
-            if auth_provider.user_id == current_user.id:
-                flash(f'This {provider.capitalize()} account is already linked to your account.', 'info')
-            else:
-                flash(f'This {provider.capitalize()} account is already linked to another account.', 'danger')
-            return redirect(url_for('auth.link'))
-        
-        # Login case - log in the user
-        login_user(auth_provider.user)
-        flash(f'Logged in with {provider.capitalize()}.', 'success')
+
+    # Get the response from GitHub API
+    resp = github.get('user')
+    if not resp.ok:
+        flash('Failed to get user info from GitHub.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    # Get user info
+    user_info = resp.json()
+
+    print(f"User info: {user_info}")
+
+    # Print all session data for debugging
+    print("GitHub session data:")
+    for key, value in github.__dict__.items():
+        print(f"{key}: {value}")
+
+    # Alternative way to access the session data
+    token = github.token
+    print(f"Access token: {token}")
+
+
+    if session.get('next_url'):
+        next_url = session.pop('next_url')
     else:
-        # New provider account
-        if is_linking:
-            # Link to current user
-            create_auth_provider(provider, provider_user_info, token, current_user)
-            flash(f'Your {provider.capitalize()} account has been linked.', 'success')
-            return redirect(url_for('auth.link'))
-        
-        # Try to find a user with the same email
-        if 'email' in provider_user_info and provider_user_info['email']:
-            user = User.query.filter_by(email=provider_user_info['email']).first()
-            if user:
-                # User found, link provider to this user
-                create_auth_provider(provider, provider_user_info, token, user)
-                login_user(user)
-                flash(f'Logged in with {provider.capitalize()} and linked to your existing account.', 'success')
-            else:
-                # Create new user and provider
-                user = create_user_from_provider(provider_user_info)
-                create_auth_provider(provider, provider_user_info, token, user)
-                login_user(user)
-                flash(f'Account created with {provider.capitalize()}.', 'success')
-        else:
-            # No email available, create new user
-            user = create_user_from_provider(provider_user_info)
-            create_auth_provider(provider, provider_user_info, token, user)
-            login_user(user)
-            flash(f'Account created with {provider.capitalize()}.', 'success')
-    
-    # Redirect to the next URL if it exists
-    next_url = session.pop('next_url', None)
-    return redirect(next_url or url_for('main.index'))
+        next_url = url_for('main.index')
+    # Check if the user already exists
+    user = User.query.filter_by(email=user_info.get('email')).first()
+    if not user:
+        # Create a new user if not found
+        user = create_user_from_provider(user_info)
+    else:
+        # Update existing user info
+        user.username = user_info.get('login') or user_info.get('name')
+        user.email = user_info.get('email')
+        user.display_name = user_info.get('name')
+        user.picture_url = user_info.get('avatar_url') or user_info.get('picture')
+        db.session.commit()
+    # Create or update the auth provider record
+    auth_provider = AuthProvider.query.filter_by(
+        user_id=user.id, 
+        provider='github', 
+        provider_user_id=str(user_info['id'])  # Convert ID to string to match db column type
+    ).first()
+    if not auth_provider:
+        auth_provider = create_auth_provider('github', user_info, token, user)
+    else:
+        auth_provider.access_token = token.get('access_token')
+        auth_provider.refresh_token = token.get('refresh_token')
+        auth_provider.token_expires_at = token.get('expires_at')
+        auth_provider.provider_username = user_info.get('login') or user_info.get('name')
+        auth_provider.provider_email = user_info.get('email')
+        auth_provider.provider_picture = user_info.get('avatar_url') or user_info.get('picture')
+        db.session.commit()
+    # Log the user in
+    login_user(user)
+    flash('You have successfully logged in with GitHub.', 'success')
+    return redirect(next_url)
+
+
+
+
 
 def create_user_from_provider(provider_user_info):
     """Create a new user from provider info."""
@@ -192,7 +201,7 @@ def create_auth_provider(provider, provider_user_info, token, user):
     """Create a new auth provider record."""
     auth_provider = AuthProvider(
         provider=provider,
-        provider_user_id=provider_user_info['id'],
+        provider_user_id=str(provider_user_info['id']),  # Convert ID to string
         access_token=token.get('access_token'),
         refresh_token=token.get('refresh_token'),
         token_expires_at=token.get('expires_at'),
@@ -205,7 +214,6 @@ def create_auth_provider(provider, provider_user_info, token, user):
     db.session.commit()
     return auth_provider
 
-def get_provider_user_info(provider, token):
     """Get user info from the provider API."""
     client = oauth.create_client(provider)
     

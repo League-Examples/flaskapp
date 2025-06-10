@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, jsonify, current_app
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 # Create a Blueprint for the main routes
 main_bp = Blueprint('main', __name__)
@@ -13,3 +13,11 @@ def index():
 def health():
     """Health check endpoint."""
     return jsonify({"status": "healthy"})
+
+@main_bp.route('/dashboard')
+@login_required
+def dashboard():
+    """Protected dashboard page that requires authentication."""
+    return render_template('main/dashboard.html', user=current_user)
+
+

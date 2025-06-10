@@ -1,7 +1,6 @@
 import os
 from .base import BaseConfig
 
-
 class DevelopmentConfig(BaseConfig):
     """Development environment configuration."""
     
@@ -13,13 +12,15 @@ class DevelopmentConfig(BaseConfig):
     DB_NAME = os.getenv('DEV_DB_NAME', 'flaskapp_dev')
     DB_HOST = os.getenv('DEV_DB_HOST', 'localhost')
     DB_PORT = os.getenv('DEV_DB_PORT', '5432')
+
+    from_parts = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
     
     # SQLAlchemy database URI for development
     # Default to SQLite but can easily switch to PostgreSQL with Docker
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        'DEV_DATABASE_URI', 
-        f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
-    )
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URI', from_parts)
+
     
     # Additional development-specific settings
     LOG_LEVEL = 'DEBUG'
+
+ 
