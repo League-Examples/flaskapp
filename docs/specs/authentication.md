@@ -10,6 +10,24 @@ The Flaskapp authentication can use these auth providers:
 The code will use the providers that are configured depending on 
 which of the the ``{name}_CLIENT_ID`` values are provided in the configuration. 
 
+The .env file will hold the env vars. for instance: 
+
+
+```bash
+# http://localhost:5000/login/github/authorized
+GITHUB_CLIENT_ID=...
+GITHUB_CLIENT_SECRET=...
+
+# http://localhost:5000/login/google/authorized
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+```
+
+The base configuration has a list of the provider names, ( [`github`, `google`,
+`discord`, `slack`] ), and searches through them to find the client ID and
+secret for each provider, registering the ones that are found. 
+
+
 
 ## Multiple Authentication Methods
 
@@ -47,8 +65,23 @@ are specific to the auth providers. The database shall allow a user to
 have multiple authentication methods, so the user model is designed to
 support multiple authentication methods per user.
 
+# Routes
+
+The authentication routes are defined in the `flaskapp/auth/routes.py` file.
+
+The main route for authentication is `/auth/login/`, which  shows the user 
+the login screen with buttons to login with the configured providers.
+The `/auth/link/` route allows users to link additional accounts to their user profile.
+The `/auth/logout/` route allows users to log out of the application.
+
+For authorization callbacks, the routes are defined by the provider, for example:
+
+- `/auth/github/authorized`
+- `/auth/google/authorized`
 
 ## Implementation details 
+
+All of the auth code is in a 'auth' blueprint, registered at '/auth/'
 
 It uses the `authlib` module. All of the authentication code for this
 application is in the `flaskapp/auth` package. User logins is managed with 
