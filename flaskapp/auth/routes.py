@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request, current_app
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_dance.consumer import OAuth2Session
+from oauthlib.oauth2.rfc6749.errors import TokenExpiredError
 
 from .models import User, AuthProvider
 from flaskapp import db
@@ -11,8 +13,8 @@ import json
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth',
                    template_folder='templates')
 
-
-
+import logging
+logger = logging.getLogger(__name__)
 
 @auth_bp.route('/login/', methods=['GET', 'POST'])
 def login():
@@ -109,45 +111,152 @@ def profile():
 
 @auth_bp.route('/google/authorized')
 def google_authorized():
-    """Callback route after provider authorization."""
+    """Callback route after provider authorization.
+    
+    Typical user_info:
+
+    {'email': 'eric@foobar.org',
+    'family_name': 'Busboom',
+    'given_name': 'Eric',
+    'hd': 'foobar.org',
+    'id': '100072604372182446321',
+    'name': 'Eric Busboom',
+    'picture': 'https://lh3.googleusercontent.com/a/ACg8ocKqJuI5nLttcTvEEKSYOxn2dGJhDjTU5sxMMjf9ByyzGoNwo-0-=s96-c',
+    'verified_email': True}
+        
+    """
   
-    print(f"Provider: google")
+    from flask_dance.contrib.google import google
+
+    # Get the response from Google API
+    try:
+        resp = google.get("/oauth2/v1/userinfo")
+    except TokenExpiredError:
+        logger.error("Token expired")
+        return redirect(url_for("google.login"))
+
+    if not resp.ok:
+        flash(f'Failed to get user info from Google.', 'danger')
+        return redirect(url_for('auth.login'))
+    # Get user info
+    user_info = resp.json()
+
+    if not user_info:
+        flash('Failed to retrieve user information from Google.', 'danger')
+        return redirect(url_for('auth.login'))
+
+    return login_user_with_provider('Google', google, user_info)
 
 
 @auth_bp.route('/github/authorized')
 def github_authorized():
-    """Callback route after provider authorization."""
+    """Callback route after provider authorization.
+    
+    Typical user_info:
+    
+    {'avatar_url': 'https://avatars.githubusercontent.com/u/2523782?v=4',
+    'bio': None,
+    'blog': 'http://fooblatz.com',
+    'company': 'Civic Knowledge',
+    'created_at': '2012-10-15T03:03:25Z',
+    'email': 'eric@civicknowledge.com',
+    'followers': 19,
+    'following': 3,
+    'gravatar_id': '',
+    'hireable': True,
+    'html_url': 'https://github.com/fooblatz',
+    'id': 2560782,
+    'location': 'San Diego',
+    'login': 'fooblatz',
+    'name': 'Eric fooblatz',
+    'node_id': 'MDQI1NjA3O6VXNlcjDI=',
+    'notification_email': 'eric@fooblatz.com',
+    'public_gists': 11,
+    'public_repos': 31,
+    'site_admin': False,
+    'twitter_username': None,
+    'type': 'User',
+    'updated_at': '2025-06-07T03:01:14Z',
+    'url': 'https://api.github.com/users/fooblatz',
+    'user_view_type': 'public'}
+
+    
+    """
     from flask_dance.contrib.github import github
 
     if not github.authorized:
-        flash('GitHub authorization failed.', 'danger')
+        flash(f'Github authorization failed.', 'danger')
         return redirect(url_for('auth.login'))
 
-    # Get the response from GitHub API
+        # Get the response from GitHub API
     resp = github.get('user')
     if not resp.ok:
-        flash('Failed to get user info from GitHub.', 'danger')
+        flash(f'Failed to get user info from Github.', 'danger')
         return redirect(url_for('auth.login'))
-
-    # Get user info
+    
+        # Get user info
     user_info = resp.json()
 
-    print(f"User info: {user_info}")
+    from pprint import pprint
+    pprint(user_info)
 
-    # Print all session data for debugging
-    print("GitHub session data:")
-    for key, value in github.__dict__.items():
-        print(f"{key}: {value}")
+    return login_user_with_provider('Github', github, user_info)
 
-    # Alternative way to access the session data
-    token = github.token
-    print(f"Access token: {token}")
 
+def login_user_with_provider(name, provider: OAuth2Session, user_info):
+
+
+
+    user = update_user_database(user_info, provider.token)
 
     if session.get('next_url'):
         next_url = session.pop('next_url')
     else:
         next_url = url_for('main.index')
+
+
+    flash(f'You have successfully logged in with {provider}.', 'success')
+    login_user(user)
+    return redirect(next_url)
+
+
+def update_auth_provider(user, provider, user_info, token: dict):
+
+    auth_provider = AuthProvider.query.filter_by(
+        user_id=user.id, 
+        provider='github', 
+        provider_user_id=str(user_info['id'])  # Convert ID to string to match db column type
+        ).first()
+
+    if not auth_provider:
+           
+        auth_provider = AuthProvider(
+            provider=provider,
+            provider_user_id=str(user_info['id']),  # Convert ID to string
+            access_token=token.get('access_token'),
+            refresh_token=token.get('refresh_token'),
+            token_expires_at=token.get('expires_at'),
+            provider_username=user_info.get('login') or user_info.get('name'),
+            provider_email=user_info.get('email'),
+            provider_picture=user_info.get('avatar_url') or user_info.get('picture'),
+            user=user
+        )
+        db.session.add(auth_provider)
+        db.session.commit()
+        return auth_provider
+    else:
+        auth_provider.access_token = token.get('access_token')
+        auth_provider.refresh_token = token.get('refresh_token')
+        auth_provider.token_expires_at = token.get('expires_at')
+        auth_provider.provider_username = user_info.get('login') or user_info.get('name')
+        auth_provider.provider_email = user_info.get('email')
+        auth_provider.provider_picture = user_info.get('avatar_url') or user_info.get('picture')
+        db.session.commit()
+
+
+def update_user_database(user_info, token: dict):
+
+
     # Check if the user already exists
     user = User.query.filter_by(email=user_info.get('email')).first()
     if not user:
@@ -161,25 +270,10 @@ def github_authorized():
         user.picture_url = user_info.get('avatar_url') or user_info.get('picture')
         db.session.commit()
     # Create or update the auth provider record
-    auth_provider = AuthProvider.query.filter_by(
-        user_id=user.id, 
-        provider='github', 
-        provider_user_id=str(user_info['id'])  # Convert ID to string to match db column type
-    ).first()
-    if not auth_provider:
-        auth_provider = create_auth_provider('github', user_info, token, user)
-    else:
-        auth_provider.access_token = token.get('access_token')
-        auth_provider.refresh_token = token.get('refresh_token')
-        auth_provider.token_expires_at = token.get('expires_at')
-        auth_provider.provider_username = user_info.get('login') or user_info.get('name')
-        auth_provider.provider_email = user_info.get('email')
-        auth_provider.provider_picture = user_info.get('avatar_url') or user_info.get('picture')
-        db.session.commit()
-    # Log the user in
-    login_user(user)
-    flash('You have successfully logged in with GitHub.', 'success')
-    return redirect(next_url)
+   
+
+
+
 
 
 
@@ -197,22 +291,6 @@ def create_user_from_provider(provider_user_info):
     db.session.commit()
     return user
 
-def create_auth_provider(provider, provider_user_info, token, user):
-    """Create a new auth provider record."""
-    auth_provider = AuthProvider(
-        provider=provider,
-        provider_user_id=str(provider_user_info['id']),  # Convert ID to string
-        access_token=token.get('access_token'),
-        refresh_token=token.get('refresh_token'),
-        token_expires_at=token.get('expires_at'),
-        provider_username=provider_user_info.get('login') or provider_user_info.get('name'),
-        provider_email=provider_user_info.get('email'),
-        provider_picture=provider_user_info.get('avatar_url') or provider_user_info.get('picture'),
-        user=user
-    )
-    db.session.add(auth_provider)
-    db.session.commit()
-    return auth_provider
 
     """Get user info from the provider API."""
     client = oauth.create_client(provider)

@@ -39,5 +39,5 @@ class BaseConfig:
     OAUTH_PROVIDERS = [ n for n in possible_oauth_providers 
                        if os.getenv(f'{n.upper()}_CLIENT_ID') and os.getenv(f'{n.upper()}_CLIENT_SECRET')]
     
-
-   
+    GOOGLE_LOGIN_SCOPES = os.getenv('GOOGLE_LOGIN_SCOPES', 'openid').split(',')
+    
