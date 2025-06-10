@@ -43,8 +43,7 @@ def create_app():
     from flaskapp.main.routes import main_bp
     app.register_blueprint(main_bp)
     
-    from flaskapp.auth.routes import auth_bp
-    app.register_blueprint(auth_bp)
+
     
     from flaskapp.demo import demo_bp
     app.register_blueprint(demo_bp)
