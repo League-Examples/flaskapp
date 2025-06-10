@@ -21,3 +21,11 @@ class BaseConfig:
     # Static and template folder settings
     STATIC_FOLDER = 'static'
     TEMPLATE_FOLDER = 'templates'
+    
+    # Session configuration
+    SESSION_TYPE = 'sqlalchemy'
+    SESSION_PERMANENT = True
+    PERMANENT_SESSION_LIFETIME = 604800  # 7 days in seconds
+    
+    # OAuth settings
+    OAUTH_PROVIDERS = []  # Will be populated based on environment variables

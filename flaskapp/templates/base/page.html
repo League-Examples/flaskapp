@@ -31,21 +31,28 @@
         </li>
         {% endif %}
 
-
-
       </ul>
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
         {% if current_user.is_authenticated %}
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            {% if current_user.picture_url %}
+            <img src="{{ current_user.picture_url }}" alt="Avatar" class="rounded-circle me-1" width="24" height="24">
+            {% else %}
+            <i class="fas fa-user-circle me-1"></i>
+            {% endif %}
+            {{ current_user.display_name or current_user.username or 'User' }}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}"><i class="fas fa-user me-2"></i>Profile</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('auth.link') }}"><i class="fas fa-link me-2"></i>Linked Accounts</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+          </ul>
         </li>
-        {% if current_user.avatar_url %}
+        {% else %}
         <li class="nav-item">
-          <img src="{{ current_user.avatar_url }}" alt="Avatar" class="rounded-circle" width="30" height="30">
-        </li>
-        {% endif %}
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+          <a class="nav-link" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt me-1"></i>Login</a>
         </li>
         {% endif %}
       </ul>
