@@ -74,17 +74,17 @@ the login screen with buttons to login with the configured providers.
 The `/auth/link/` route allows users to link additional accounts to their user profile.
 The `/auth/logout/` route allows users to log out of the application.
 
-For authorization callbacks, the routes are defined by the provider, for example:
-
-- `/auth/github/authorized`
-- `/auth/google/authorized`
 
 ## Implementation details 
 
 All of the auth code is in a 'auth' blueprint, registered at '/auth/'
 
-It uses the `authlib` module. All of the authentication code for this
+All of the authentication code for this
 application is in the `flaskapp/auth` package. User logins is managed with 
 `flask_login`.
+
+It uses the `flask-dance` module, using the `make_<provider>_blueprint` functions
+to create blueprints for each provider. The blueprints are registers with the 
+prefix `/auth/<provider>/` where `<provider>` is the name of the provider
 
 Auth specific templates are in the `flaskapp/auth/templates/auth` directory
