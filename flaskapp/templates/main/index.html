@@ -1,0 +1,108 @@
+{% extends "base/page.html" %}
+
+{% block title %}Home - FlaskApp{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 text-center mb-4">
+            <h1 class="display-4">Welcome to FlaskApp</h1>
+            <p class="lead">A Flask application with multi-provider authentication</p>
+        </div>
+    </div>
+
+    {% if user.is_authenticated %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">User Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            {% if user.picture_url %}
+                                <img src="{{ user.picture_url }}" class="img-fluid rounded-circle mb-3" alt="Profile picture" style="max-width: 150px; max-height: 150px;">
+                            {% else %}
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px;">
+                                    <i class="fa-solid fa-user fa-4x text-white"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <h5><i class="fas fa-user-circle me-2"></i>Profile</h5>
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row">Username</th>
+                                            <td>{{ user.username or 'Not set' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Display Name</th>
+                                            <td>{{ user.display_name or 'Not set' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Email</th>
+                                            <td>{{ user.email or 'Not set' }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <h5><i class="fas fa-link me-2"></i>Linked Accounts</h5>
+                        <div class="list-group">
+                            {% for provider in user.auth_providers %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">
+                                            <i class="fa-brands fa-{{ provider.provider }} me-2"></i>
+                                            {{ provider.provider|capitalize }}
+                                        </h6>
+                                        <small>ID: {{ provider.provider_user_id[:8] if provider.provider_user_id else 'N/A' }}</small>
+                                    </div>
+                                    <p class="mb-1">
+                                        {% if provider.provider_username %}
+                                            Username: {{ provider.provider_username }}
+                                        {% endif %}
+                                        {% if provider.provider_email %}
+                                            | Email: {{ provider.provider_email }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/auth/profile" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                        </a>
+                        <a href="/auth/link/" class="btn btn-outline-primary">
+                            <i class="fas fa-link me-2"></i>Manage Linked Accounts
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <h3 class="mb-4">You are not logged in</h3>
+                    <p class="lead mb-4">Sign in to see your user information and access all features of the application.</p>
+                    <a href="/auth/login/" class="btn btn-lg btn-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
