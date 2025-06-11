@@ -2,7 +2,8 @@ from flask import Blueprint, render_template, jsonify, current_app
 from flask_login import current_user, login_required
 
 # Create a Blueprint for the main routes
-main_bp = Blueprint('main', __name__)
+main_bp = Blueprint('main', __name__,
+                   template_folder='templates')
 
 @main_bp.route('/')
 def index():
