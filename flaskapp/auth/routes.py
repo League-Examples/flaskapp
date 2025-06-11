@@ -26,7 +26,6 @@ def login():
         # Clear the pre-auth URL after using it
         session.pop('pre_auth_url', None)
     
-        
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     
@@ -61,6 +60,11 @@ def link():
     return render_template('auth/link.html', 
                           providers=providers, 
                           linked_providers=linked_providers)
+
+@auth_bp.route('/link/<provider')
+@login_required
+def link_provider(provider):
+    
 
 @auth_bp.route('/unlink/<provider>')
 @login_required
@@ -205,8 +209,6 @@ def github_authorized():
 
 def login_user_with_provider(name, provider: OAuth2Session, user_info):
 
-
-
     user = update_user_database(user_info, provider.token)
 
     if session.get('next_url'):
@@ -214,8 +216,7 @@ def login_user_with_provider(name, provider: OAuth2Session, user_info):
     else:
         next_url = url_for('main.index')
 
-
-    flash(f'You have successfully logged in with {provider}.', 'success')
+    flash(f'You have successfully logged in with {name}.', 'success')
     login_user(user)
     return redirect(next_url)
 
@@ -224,7 +225,7 @@ def update_auth_provider(user, provider, user_info, token: dict):
 
     auth_provider = AuthProvider.query.filter_by(
         user_id=user.id, 
-        provider='github', 
+        provider=provider, 
         provider_user_id=str(user_info['id'])  # Convert ID to string to match db column type
         ).first()
 
@@ -255,21 +256,45 @@ def update_auth_provider(user, provider, user_info, token: dict):
 
 
 def update_user_database(user_info, token: dict):
-
-
+    """Update user database with provider information.
+    
+    Works with both GitHub and Google user data structures.
+    """
     # Check if the user already exists
     user = User.query.filter_by(email=user_info.get('email')).first()
+    
     if not user:
         # Create a new user if not found
         user = create_user_from_provider(user_info)
     else:
         # Update existing user info
-        user.username = user_info.get('login') or user_info.get('name')
+        # Handle different provider formats (GitHub vs Google)
+        user.username = (
+            user_info.get('login') or  # GitHub username
+            user_info.get('name') or   # Name field (both providers)
+            f"{user_info.get('given_name')} {user_info.get('family_name')}"  # Google name parts
+        ).strip()
+        
         user.email = user_info.get('email')
-        user.display_name = user_info.get('name')
+        
+        # Handle display name from different providers
+        user.display_name = (
+            user_info.get('name') or  # Both providers
+            f"{user_info.get('given_name')} {user_info.get('family_name')}"  # Google name parts
+        ).strip()
+        
+        # Handle profile picture from different providers
         user.picture_url = user_info.get('avatar_url') or user_info.get('picture')
+        
         db.session.commit()
+    
+    # Get provider name from user_info structure
+    provider = 'google' if 'hd' in user_info or 'given_name' in user_info else 'github'
+    
     # Create or update the auth provider record
+    update_auth_provider(user, provider, user_info, token)
+    
+    return user
    
 
 
@@ -281,10 +306,22 @@ def update_user_database(user_info, token: dict):
 
 def create_user_from_provider(provider_user_info):
     """Create a new user from provider info."""
+    # Handle different provider formats (GitHub vs Google)
+    username = (
+        provider_user_info.get('login') or  # GitHub username
+        provider_user_info.get('name') or   # Name field (both providers)
+        f"{provider_user_info.get('given_name')} {provider_user_info.get('family_name')}"  # Google name parts
+    ).strip()
+    
+    display_name = (
+        provider_user_info.get('name') or  # Both providers
+        f"{provider_user_info.get('given_name')} {provider_user_info.get('family_name')}"  # Google name parts
+    ).strip()
+    
     user = User(
-        username=provider_user_info.get('login') or provider_user_info.get('name'),
+        username=username,
         email=provider_user_info.get('email'),
-        display_name=provider_user_info.get('name'),
+        display_name=display_name,
         picture_url=provider_user_info.get('avatar_url') or provider_user_info.get('picture')
     )
     db.session.add(user)
