@@ -61,10 +61,16 @@ def link():
                           providers=providers, 
                           linked_providers=linked_providers)
 
-@auth_bp.route('/link/<provider')
+@auth_bp.route('/link/<provider>')
 @login_required
 def link_provider(provider):
-    
+    print(f'Linking provider: {provider}')
+
+    session['link-to'] = current_user.id
+
+    return redirect(url_for(f'{provider}.login'))
+
+
 
 @auth_bp.route('/unlink/<provider>')
 @login_required
@@ -201,8 +207,6 @@ def github_authorized():
         # Get user info
     user_info = resp.json()
 
-    from pprint import pprint
-    pprint(user_info)
 
     return login_user_with_provider('Github', github, user_info)
 
@@ -217,9 +221,32 @@ def login_user_with_provider(name, provider: OAuth2Session, user_info):
         next_url = url_for('main.index')
 
     flash(f'You have successfully logged in with {name}.', 'success')
-    login_user(user)
+    if session.get('link-to'):
+        if not current_user.is_authenticated:
+            flash('You must be logged in to link accounts.', 'danger')
+            return redirect(url_for('auth.login'))
+        # If linking accounts, set the user ID in the session
+        current_user_id = session['link-to']
+        flash(f'Your {name} account has been linked.', 'success')
+        del session['link-to']
+        link_users(current_user, user)
+        # Already logged in
+    else:
+        login_user(user)
+
     return redirect(next_url)
 
+
+def link_users(user1, user2):
+    """Link two users together by copying auth providers."""
+    if user1.id == user2.id:
+        flash('You cannot link the same user account.', 'danger')
+        return
+
+   
+    
+    db.session.commit()
+    flash('Accounts linked successfully.', 'success')
 
 def update_auth_provider(user, provider, user_info, token: dict):
 
@@ -298,20 +325,14 @@ def update_user_database(user_info, token: dict):
    
 
 
-
-
-
-
-
-
 def create_user_from_provider(provider_user_info):
     """Create a new user from provider info."""
     # Handle different provider formats (GitHub vs Google)
-    username = (
-        provider_user_info.get('login') or  # GitHub username
-        provider_user_info.get('name') or   # Name field (both providers)
-        f"{provider_user_info.get('given_name')} {provider_user_info.get('family_name')}"  # Google name parts
-    ).strip()
+    from slugify import slugify
+
+    email=provider_user_info.get('email')
+
+    username = slugify(email.strip())
     
     display_name = (
         provider_user_info.get('name') or  # Both providers
@@ -320,7 +341,7 @@ def create_user_from_provider(provider_user_info):
     
     user = User(
         username=username,
-        email=provider_user_info.get('email'),
+        email=email,
         display_name=display_name,
         picture_url=provider_user_info.get('avatar_url') or provider_user_info.get('picture')
     )
@@ -328,39 +349,3 @@ def create_user_from_provider(provider_user_info):
     db.session.commit()
     return user
 
-
-    """Get user info from the provider API."""
-    client = oauth.create_client(provider)
-    
-    if provider == 'github':
-        resp = client.get('user')
-        if resp.ok:
-            user_info = resp.json()
-            # Get email if not public
-            if not user_info.get('email'):
-                email_resp = client.get('user/emails')
-                if email_resp.ok:
-                    emails = email_resp.json()
-                    primary_email = next((email for email in emails if email.get('primary')), None)
-                    if primary_email:
-                        user_info['email'] = primary_email.get('email')
-            return user_info
-    
-    elif provider == 'google':
-        resp = client.get('userinfo')
-        if resp.ok:
-            return resp.json()
-    
-    elif provider == 'discord':
-        resp = client.get('users/@me')
-        if resp.ok:
-            return resp.json()
-    
-    elif provider == 'slack':
-        resp = client.get('users.identity')
-        if resp.ok:
-            data = resp.json()
-            if 'user' in data:
-                return data['user']
-    
-    return None
