@@ -227,26 +227,17 @@ def login_user_with_provider(name, provider: OAuth2Session, user_info):
             return redirect(url_for('auth.login'))
         # If linking accounts, set the user ID in the session
         current_user_id = session['link-to']
-        flash(f'Your {name} account has been linked.', 'success')
+        flash(f'Linking isn\'t actually implemented.', 'warning')
         del session['link-to']
-        link_users(current_user, user)
-        # Already logged in
+        #link_users(current_user, user)
+        return redirect(next_url)
     else:
         login_user(user)
 
     return redirect(next_url)
 
 
-def link_users(user1, user2):
-    """Link two users together by copying auth providers."""
-    if user1.id == user2.id:
-        flash('You cannot link the same user account.', 'danger')
-        return
 
-   
-    
-    db.session.commit()
-    flash('Accounts linked successfully.', 'success')
 
 def update_auth_provider(user, provider, user_info, token: dict):
 
