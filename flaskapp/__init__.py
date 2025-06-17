@@ -83,14 +83,12 @@ class FlaskApp(Flask):
     def _register_cli_commands(self):
         """Register CLI commands with the application"""
         # Import CLI commands
-        from flaskapp.cli.cmd1 import cmd1_command
-        from flaskapp.cli.cmd2 import cmd2_command
+
         from flaskapp.cli.config import config_command
         from flaskapp.cli.dev import dev_cli
         
         # Add commands to the Flask CLI
-        self.cli.add_command(cmd1_command)
-        self.cli.add_command(cmd2_command)
+
         self.cli.add_command(config_command)
         self.cli.add_command(dev_cli)
     
