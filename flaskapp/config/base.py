@@ -15,6 +15,9 @@ possible_oauth_providers = [
 class BaseConfig:
     """Base configuration class with settings common to all environments."""
     
+    # Flask application module
+    FLASK_APP = 'wsgi:app'
+    
     # Secret key for session management
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-please-change-in-production')
     
@@ -40,4 +43,3 @@ class BaseConfig:
                        if os.getenv(f'{n.upper()}_CLIENT_ID') and os.getenv(f'{n.upper()}_CLIENT_SECRET')]
     
     GOOGLE_LOGIN_SCOPES = os.getenv('GOOGLE_LOGIN_SCOPES', 'openid').split(',')
-    

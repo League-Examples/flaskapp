@@ -16,6 +16,8 @@ class User(db.Model, UserMixin):
     display_name = db.Column(db.String(120), nullable=True)
     picture_url = db.Column(db.String(255), nullable=True)
     
+    data = db.Column(db.JSON, nullable=True)
+
     # Relationships
     auth_providers = db.relationship('AuthProvider', back_populates='user', cascade='all, delete-orphan')
     
@@ -59,6 +61,8 @@ class AuthProvider(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     user = db.relationship('User', back_populates='auth_providers')
     
+    data = db.Column(db.JSON, nullable=True)
+
     __table_args__ = (
         db.UniqueConstraint('provider', 'provider_user_id', name='unique_provider_user'),
     )
